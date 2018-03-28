@@ -1,8 +1,10 @@
 ---
-title: "R Notebook"
+title: "R-Packages for time series data"
 output:
-  pdf_document: default
+  html_document:
+    df_print: paged
   html_notebook: default
+  pdf_document: default
 ---
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(warning = FALSE,
@@ -10,14 +12,79 @@ knitr::opts_chunk$set(warning = FALSE,
                       cache = TRUE)
 ```
 
+# Quantmod
+
+Contiution to financial hw3 problem, **quantmod** package offers Quantitative Financial Modelling & Trading Framework for R. This page discusses some of the ways quantmod package can be used in plotting financial charts. 
+
+Quantmod package can be used for exracting and plotting equities, economic indicators, FX, commodities and cryptocurrencies (the latest financial assetclass)
 
 ```{r}
-plot(cars)
+library(quantmod)
+getSymbols("AMZN", src ="yahoo") #Equities: getting data for Amazon from yahoo finance
+getSymbols("AAPL", src ="yahoo") 
+getSymbols("CPIAUCSL",src="FRED") #Economic indicators: getting data for "Consumer Price Index for All Urban Consumers: All Items" from Federal Reserve Bank of St. Louis FRED®
+getSymbols("EUR/USD",src="oanda") #FX rates: getting EUR USD rate from Oanda corp
+getSymbols("XAU/USD",src="oanda") #Commodities:  getting Gold price in USD from Oanda corp
+getSymbols('BTCUSD=X',src = "yahoo") #Cryptocurrency: getting Bitcoin price in USD
+```
+* A simple *barChart* command in qunatmod plots historical movements in stockprices. 
+* Quantmod can be used to plot Bollinger bands. They are plotted 2 standard deviations above and below the simple moving average 
+* This package also plots Moving Average conversion divergence line, which helps trades to decide their entry and exit points.
+```{r}
+barChart(AMZN, subset='last 3 months')  #This command shows how Amazon stock has been performing over last 3 months
+addBBands()  # this adds Bollinger bands to stock price movement. 
+addMACD() #this plots MACD
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+To change background of the plot to white, theme paramenter can be introduced in below fashion.
+```{r}
+barChart(AMZN, subset='last 3 months',theme='white.mono') 
+```
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+Another important type of plot to analyze historical financial data is candlestick chart. Quantmod can be used to plot candlestick plot in a single line command.
+```{r}
+candleChart(AMZN,subset='last 3 months') #here green indicates upward moving stock price
+#orange indicates downward moving stock price
+```
 
+Color coding for price movements and plot theme in candlechart can be changed with in the same line.
+```{r}
+candleChart(AMZN,subset='last 3 months',up.col='green',dn.col='red', theme='white')
+
+```
+
+Using this package, we can adjust the duration of candlestick. For eg: the below code plots weekly candlestick chart of Amazon stock price movement.
+
+```{r}
+candleChart(to.weekly(AMZN),subset='last 6 months',up.col='green',dn.col='red', theme='white')
+```
+
+Sometime just looking at plain vanilla line chart would be sufficient to explain / understand price movements. For this scenario, following command can be used.
+
+```{r}
+lineChart(AMZN, subset='last 6 months')
+```
+
+# dygraphs for R
+As stock prices are time-series data, sometimes it is necessary to know the stock prices of 2 or more different stocks on a single chart. For this, the package called **dygraph** can be used. This package is a R interface to the dygraph JavaScript charting library. 
+
+One cool feature of this multi line chart plotted with this package is interactiveness unlike static charts from **ggplot2**. If you hover your mouse, each series individual values are displayed.  
+
+```{r}
+
+library(dygraphs)
+stockprices <- cbind(AMZN$AMZN.Adjusted, AAPL$AAPL.Adjusted)
+dygraph(stockprices)
+```
+
+*dygraph* package provides another feature for dynamically selecting the range of the chart we need to see. If we use indexed data, this helps in understanding returns of 2 different stocks or asset classes. Bottom of the chart has slider which acts as a range selector.
+
+```{r}
+dygraph(stockprices) %>% dyRangeSelector()
+```
+
+
+## References:
+1) https://www.quantmod.com/ 
+2) https://rstudio.github.io/dygraphs/index.html
